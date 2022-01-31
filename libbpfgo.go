@@ -448,9 +448,20 @@ func (b *BPFMap) GetValue(key unsafe.Pointer) ([]byte, error) {
 
 	errC := C.bpf_map_lookup_elem(b.fd, key, valuePtr)
 	if errC != 0 {
-		return nil, fmt.Errorf("failed to lookup value %v in map %s", key, b.name)
+    return nil, fmt.Errorf("failed to lookup value %v in map %s(code: %d)", key, b.name, errC)
 	}
 	return value, nil
+}
+
+// GetValueAndDelete allows for a lookup key and delete the key.
+func (b *BPFMap) GetValueAndDelete(key unsafe.Pointer) ([]byte, error) {
+  value := make([]byte, b.ValueSize())
+  valuePtr := unsafe.Pointer(&value[0])
+  errC := C.bpf_map_lookup_and_delete_elem(b.fd, key, valuePtr)
+  if errC != 0 {
+    return nil, fmt.Errorf("failed to lookup and delete value %v in map %s", key, b.name)
+  }
+  return value, nil
 }
 
 // BPFMapBatchOpts mirrors the C structure bpf_map_batch_opts.
